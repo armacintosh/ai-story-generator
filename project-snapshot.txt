@@ -1,0 +1,64 @@
+# AI Story Generator Project Snapshot
+
+## Project Structure
+```
+ai-story-generator/
+├── dist/
+│   ├── assets/
+│   │   ├── index-BryNwZ6j.css
+│   │   └── index-CiuBxDFH.js
+│   └── index.html
+├── public/
+│   └── vite.svg
+├── src/
+│   ├── components/
+│   │   ├── LoadingScreen.tsx
+│   │   ├── StoryDisplay.tsx
+│   │   └── StoryForm.tsx
+│   ├── utils/
+│   │   └── storyGenerator.ts
+│   ├── App.tsx
+│   ├── index.css
+│   ├── main.tsx
+│   └── vite-env.d.ts
+├── .bolt/
+│   ├── config.json
+│   └── prompt
+├── .env
+├── .gitignore
+├── index.html
+├── package.json
+├── package-lock.json
+├── postcss.config.js
+├── README.md
+├── tailwind.config.js
+├── tsconfig.json
+├── tsconfig.node.json
+└── vite.config.ts
+```
+
+## /dist/index.html
+```html
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>A Story from Today</title>
+    <script type="module" crossorigin src="/assets/index-CiuBxDFH.js"></script>
+    <link rel="stylesheet" href="/assets/index-BryNwZ6j.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
+```
+
+## /dist/assets/index-CiuBxDFH.js
+This file contains the bundled JavaScript code for the application. It's a minified and optimized version of all the TypeScript and JavaScript files in the project.
+
+## /dist/assets/index-BryNwZ6j.css
+This file contains the bundled and optimized CSS styles for the application, including the processed Tailwind CSS classes.
+
+[Rest of the file content remains the same...]

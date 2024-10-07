@@ -1,5 +1,7 @@
 # AI Story Generator
 
+Try it here https://bedtimestorygenerator.netlify.app/
+
 This project is an AI-powered story generator that creates unique children's stories based on user input. It uses React, TypeScript, and the Google Generative AI API to generate story content and images.
 
 ## Features

@@ -37,7 +37,9 @@ ai-story-generator/
 └── vite.config.ts
 ```
 
-## /dist/index.html
+## File Contents
+
+### /dist/index.html
 ```html
 <!doctype html>
 <html lang="en">
@@ -55,10 +57,216 @@ ai-story-generator/
 </html>
 ```
 
-## /dist/assets/index-CiuBxDFH.js
+### /dist/assets/index-CiuBxDFH.js
 This file contains the bundled JavaScript code for the application. It's a minified and optimized version of all the TypeScript and JavaScript files in the project.
 
-## /dist/assets/index-BryNwZ6j.css
+### /dist/assets/index-BryNwZ6j.css
 This file contains the bundled and optimized CSS styles for the application, including the processed Tailwind CSS classes.
 
-[Rest of the file content remains the same...]
+### /src/App.tsx
+```typescript
+import React, { useState } from 'react'
+import { Book } from 'lucide-react'
+import StoryForm from './components/StoryForm'
+import StoryDisplay from './components/StoryDisplay'
+import LoadingScreen from './components/LoadingScreen'
+import { generateStory } from './utils/storyGenerator'
+
+interface Story {
+  pages: { text: string; imageUrl: string }[]
+}
+
+function App() {
+  const [story, setStory] = useState<Story | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [loadingProgress, setLoadingProgress] = useState({ current: 0, total: 0 })
+
+  const handleGenerateStory = async (storyOutline: string) => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const generatedStory = await generateStory(storyOutline, setLoadingProgress)
+      setStory(generatedStory)
+    } catch (error) {
+      console.error('Error generating story:', error)
+      setError(error.message || 'An unexpected error occurred while generating the story.')
+    } finally {
+      setIsLoading(false)
+      setLoadingProgress({ current: 0, total: 0 })
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-blue-100 to-purple-100 flex flex-col items-center justify-center p-4">
+      <header className="mb-8 text-center">
+        <Book className="w-16 h-16 mx-auto mb-4 text-blue-600" />
+        <h1 className="text-4xl font-bold text-gray-800">A Story from Today</h1>
+        <p className="text-xl text-gray-600">Create unique stories with AI-generated content!</p>
+      </header>
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+          <strong className="font-bold">Error: </strong>
+          <span className="block sm:inline">{error}</span>
+        </div>
+      )}
+      {isLoading ? (
+        <LoadingScreen progress={loadingProgress} />
+      ) : !story ? (
+        <StoryForm onSubmit={handleGenerateStory} isLoading={isLoading} />
+      ) : (
+        <StoryDisplay story={story} onReset={() => {setStory(null); setError(null);}} />
+      )}
+    </div>
+  )
+}
+
+export default App
+```
+
+### /src/main.tsx
+```typescript
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import App from './App.tsx'
+import './index.css'
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+)
+```
+
+### /src/index.css
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+```
+
+### /src/utils/storyGenerator.ts
+```typescript
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GOOGLE_API_KEY);
+
+interface Story {
+  pages: { text: string; imageUrl: string }[]
+}
+
+function generateImageUrl(text: string): string {
+  const encodedText = encodeURIComponent(text);
+  const style = "cartoon,colorful,children's book illustration";
+  return `https://image.pollinations.ai/prompt/${encodedText}?style=${style}&width=800&height=600`;
+}
+
+export async function generateStory(
+  storyOutline: string,
+  setLoadingProgress: (progress: { current: number; total: number }) => void
+): Promise<Story> {
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const result = await model.generateContent(`You are a creative children's story writer. Create a short story based on the following outline, divided into 6 pages. Each page should be a short paragraph suitable for generating a cartoon image: ${storyOutline}`);
+    const storyText = result.response.text();
+    const storyPages = storyText.split('\n\n').filter(page => page.trim() !== '');
+
+    if (storyPages.length === 0) {
+      throw new Error("Failed to generate story text");
+    }
+
+    setLoadingProgress({ current: 0, total: storyPages.length });
+
+    const storyWithImages = await Promise.all(storyPages.map(async (pageText, index) => {
+      setLoadingProgress({ current: index + 1, total: storyPages.length });
+      const imageUrl = generateImageUrl(pageText);
+      // Simulate image loading
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return { text: pageText, imageUrl };
+    }));
+
+    return { pages: storyWithImages };
+  } catch (error) {
+    console.error('Error generating story:', error);
+    throw new Error(`Failed to generate story: ${error.message}`);
+  }
+}
+```
+
+### /src/components/StoryForm.tsx, /src/components/StoryDisplay.tsx, /src/components/LoadingScreen.tsx
+These files contain the React components for the story form, story display, and loading screen, respectively. Their contents are as previously shown in the project files.
+
+### /index.html
+```html
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite + React + TS</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+```
+
+### /package.json
+```json
+{
+  "name": "ai-story-generator",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.2.1",
+    "lucide-react": "^0.344.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.5",
+    "@types/react-dom": "^18.3.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.2",
+    "@typescript-eslint/parser": "^7.0.2",
+    "@vitejs/plugin-react": "^4.3.1",
+    "autoprefixer": "^10.4.18",
+    "eslint": "^8.56.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.5",
+    "postcss": "^8.4.35",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5.5.3",
+    "vite": "^5.4.2"
+  }
+}
+```
+
+### /README.md
+This file contains the project description, setup instructions, and other relevant information as previously shown.
+
+### Configuration Files
+- postcss.config.js
+- tailwind.config.js
+- tsconfig.json
+- tsconfig.node.json
+- vite.config.ts
+- eslint.config.js
+
+These configuration files contain the settings for PostCSS, Tailwind CSS, TypeScript, Vite, and ESLint, respectively, as previously shown in the project files.
+
+### Hidden Files
+- .env (contains environment variables, not shown for security reasons)
+- .gitignore (specifies intentionally untracked files to ignore)
+- .bolt/config.json and .bolt/prompt (development environment specific files)
+- package-lock.json (automatically generated for any operations where npm modifies either the node_modules tree or package.json)
+
+These files are important for the project but are typically not committed to version control (except for .gitignore and package-lock.json) or are specific to the development environment.
